@@ -1,43 +1,81 @@
 version: '3.8'
 services:
-  auth_service:
-    build: ./auth_service
-    ports:
-      - "5001:5001"
-    environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/users_db
 
-  certificator_service:
-    build: ./certificator_service
-    ports:
-      - "5002:5002"
-
-  item_valor_service:
-    build: ./item_valor_service
-    ports:
-      - "5003:5003"
-    environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/users_db
-
-  user_service:
-    build: ./user_service
-    ports:
-      - "5004:5004"
-    environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/users_db
-    depends_on:
-      - db
-
-  db:
+  db_services:
     image: postgres:13
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=users_db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d users_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - micros-net
+    restart: always
+
+
+  api_gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:5000"
+    restart: always
+    networks:
+      - micros-net
+    depends_on:
+      - db_services
+
+  auth_service:
+    build: ./auth_service
+    ports:
+      - "8081:5001"
+    restart: always
+    networks:
+      - micros-net
+    depends_on:
+      - db_services
+
+  certificator_service:
+    build: ./certificator_service
+    ports:
+      - "8082:5002"
+    restart: always
+    networks:
+      - micros-net
+    depends_on:
+      - db_services
+
+
+  item_valor_service:
+    build: ./item_valor_service
+    ports:
+      - "8083:5003"
+    restart: always
+    networks:
+      - micros-net
+    depends_on:
+      - db_services
+
+  users_service:
+    build: ./user_service
+    ports:
+      - "8084:5004"
+    restart: always
+    networks:
+      - micros-net
+    depends_on:
+      - db_services
+
+
+networks:
+  micros-net:
+    driver: bridge
 
 volumes:
   pgdata:

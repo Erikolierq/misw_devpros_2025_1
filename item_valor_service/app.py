@@ -11,7 +11,9 @@ from domain.clinical_result import ClinicalResult
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
-    'DATABASE_URL', 'postgresql://user:password@db:5432/users_db'
+    'DATABASE_URL', 
+    'postgresql://user:password@db_services:5432/users_db'
+
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'super-secret-key'

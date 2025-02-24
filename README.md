@@ -90,7 +90,7 @@ Utiliza Postman (u otro tester de APIs) para interactuar con los siguientes endp
 ```plaintext
 Authorization: Bearer <tu_token_jwt>
 ```
-📌 Este endpoint recupera el resultado clínico con ID 1.
+📌 Este endpoint recupera el resultado clínico solo para usuarios autenticados con rol 2.
 
 ---
 

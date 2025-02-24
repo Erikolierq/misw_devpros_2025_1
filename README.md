@@ -121,12 +121,3 @@ Se separan claramente:
 - **Operaciones de comando** (creación de resultados clínicos).
 - **Operaciones de consulta** (lectura de resultados clínicos).
 
-### 🔹 Beneficios:
-✅ Facilita el mantenimiento.  
-✅ Mejora la escalabilidad.  
-✅ Permite reflejar de forma clara las reglas del negocio.  
-✅ Garantiza una integración efectiva entre microservicios.
-
----
-
-🚀 **¡La aplicación está lista para ejecutarse y probarse!** 🎯

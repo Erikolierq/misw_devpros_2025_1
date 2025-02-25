@@ -110,9 +110,6 @@ La solución se organiza en capas:
 - **Infraestructura**: Persistencia con `SQLAlchemy` y `PostgreSQL`.
 - **Aplicación**: Exposición de API con `Flask`.
 
-### 📌 Comunicación Basada en Eventos
-
-Cada vez que se crea o consulta un resultado clínico, se publica un evento de dominio. Esto simula la comunicación asíncrona que se podría realizar con un bus de eventos como `RabbitMQ` o `Kafka` en un entorno de producción.
 
 ### 📌 Patrón CQS (Command Query Separation)
 

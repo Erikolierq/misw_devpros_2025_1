@@ -21,17 +21,33 @@ services:
     restart: always
 
   redis:
-      image: redis:latest
-      container_name: redis_auth
-      restart: always
-      ports:
-        - "6379:6379"
-      volumes:
-        - redis_data:/data
-        - ./redis.conf:/usr/local/etc/redis/redis.conf
-      command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
-      networks:
-        - micros-net
+    image: redis:latest
+    container_name: redis_auth
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    networks:
+      - micros-net
+
+  pulsar:
+    image: apachepulsar/pulsar:latest
+    container_name: pulsar
+    command: ["bin/pulsar", "standalone"]
+    ports:
+      - "6650:6650"  # Puerto del broker Pulsar
+      - "8085:8080"  # Puerto de la interfaz de administración
+    healthcheck:
+      test: ["CMD-SHELL", "bin/pulsar-admin clusters list || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - micros-net
+    restart: always
 
   api_gateway:
     build: ./api-gateway
@@ -63,7 +79,6 @@ services:
     depends_on:
       - db_services
 
-
   item_valor_service:
     build: ./item_valor_service
     ports:
@@ -81,9 +96,14 @@ services:
     restart: always
     networks:
       - micros-net
+    environment:
+      - PULSAR_URL=pulsar://pulsar:6650
+      - DATABASE_URL=postgresql://user:password@db_services:5432/users_db
     depends_on:
-      - db_services
-
+      db_services:
+        condition: service_healthy
+      pulsar:
+        condition: service_healthy
 
 networks:
   micros-net:

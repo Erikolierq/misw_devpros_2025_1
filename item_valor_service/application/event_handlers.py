@@ -9,27 +9,24 @@ class EventHandler:
         self.event_store = event_store
 
     def on_result_created(self, event: ResultCreatedEvent):
-        print(f"📢 Evento recibido: {event.name} - {event.data}")
+        print(f"Evento recibido: {event.name} - {event.data}")
         self.event_store.save_event(event.data["result_id"], event)
 
     def on_result_queried(self, event: ResultQueriedEvent):
-        print(f"🔎 Evento recibido: {event.name} - {event.data}")
+        print(f"Evento recibido: {event.name} - {event.data}")
         self.event_store.save_event(event.data["result_id"], event)
 
     def process_pulsar_event(self, pulsar_client):
-        """
-        Escucha eventos de certificación en Apache Pulsar.
-        """
-        consumer = pulsar_client.subscribe("certificator-response", subscription_name="cert_sub")
-        
+        consumer = pulsar_client.subscribe("persistent://public/default/event-topic", subscription_name="event-subscription")
+
         while True:
             msg = consumer.receive()
             event_data = json.loads(msg.data().decode("utf-8"))
-            print(f"🔔 Mensaje recibido de Pulsar: {event_data}")
+            print(f"Mensaje recibido de Pulsar: {event_data}")
             
             if event_data.get("authorized", False):
-                print(f"✅ Autorizado para el resultado: {event_data['result_id']}")
+                print(f"Autorizado para el resultado: {event_data['result_id']}")
             else:
-                print(f"❌ No autorizado para el resultado: {event_data['result_id']}")
+                print(f"No autorizado para el resultado: {event_data['result_id']}")
 
             consumer.acknowledge(msg)

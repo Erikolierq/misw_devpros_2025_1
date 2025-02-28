@@ -34,30 +34,43 @@ event_handler = EventHandler(clinical_result_repo, event_store_repo)
 @app.route('/results', methods=['POST'])
 @jwt_required()
 def create_clinical_result():
-    data = request.get_json()
     try:
-        result = command_handler.handle_create_result(data.get('patient'), data.get('result'))
-        return jsonify(result), 201
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({"msg": "No se enviaron datos"}), 400
+
+        patient = data.get('patient')
+        result = data.get('result')
+
+        if not patient or not result:
+            return jsonify({"msg": "Faltan campos requeridos: 'patient' y 'result'"}), 400
+
+        result_data = command_handler.handle_create_result(patient, result)
+        
+        return jsonify(result_data), 201
+
     except ValueError as e:
         return jsonify({"msg": str(e)}), 400
+    except Exception as e:
+        app.logger.error(f"Error en create_clinical_result: {str(e)}")
+        return jsonify({"msg": "Error interno del servidor"}), 500
+
 
 @app.route('/results/<int:result_id>', methods=['GET'])
 @jwt_required()
 def get_clinical_result(result_id):
     current_user = get_jwt_identity()
+    
+    result = clinical_result_repo.get_by_id(result_id)
+
+    if not result:
+        return jsonify({"msg": "Resultado no encontrado"}), 404
     event = ResultQueriedEvent(current_user, result_id)
     event_publisher.publish(event)
 
-    import threading
-    processing_thread = threading.Thread(target=event_handler.process_pulsar_event, args=(pulsar_client,))
-    processing_thread.start()
-    processing_thread.join() 
+    return jsonify(result.to_dict()), 200
 
-    result = clinical_result_repo.get_by_id(result_id)
-
-    if result:
-        return jsonify(result.to_dict()), 200
-    return jsonify({"msg": "Resultado no encontrado"}), 404
 
 
 if __name__ == '__main__':

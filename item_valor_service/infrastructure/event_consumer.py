@@ -4,7 +4,7 @@ import json
 class EventConsumer:
     def __init__(self, pulsar_url="pulsar://pulsar:6650"):
         self.client = pulsar.Client(pulsar_url)
-        self.consumer = self.client.subscribe("command-topic", subscription_name="event-subscription")
+        self.consumer = self.client.subscribe("persistent://public/default/event-topic", subscription_name="event-subscription")
 
     def listen(self):
         while True:

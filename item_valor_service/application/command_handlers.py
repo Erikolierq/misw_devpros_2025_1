@@ -1,4 +1,4 @@
-from domain.clinical_result import ClinicalResult
+from domain.clinical_result_aggregate import ClinicalResultAggregate
 from domain.events import ResultCreatedEvent
 from infrastructure.repository import ClinicalResultRepository
 from infrastructure.event_publisher import EventPublisher
@@ -11,14 +11,21 @@ class CommandHandler:
         self.event_store = event_store
 
     def handle_create_result(self, patient, result_text):
-        if not patient or not result_text:
-            raise ValueError("Faltan campos requeridos")
+        try:
+            if not patient or not result_text:
+                raise ValueError("Faltan campos requeridos")
 
-        new_result = ClinicalResult(patient=patient, result=result_text)
-        self.repository.add(new_result)
+            aggregate = ClinicalResultAggregate.create(patient, result_text)
 
-        event = ResultCreatedEvent(new_result.id, patient, result_text)
-        self.event_store.save_event(event) 
-        self.publisher.publish(event)
+            self.repository.add(aggregate.clinical_result)
 
-        return new_result.to_dict()
+            event = ResultCreatedEvent(aggregate.clinical_result.id, patient, result_text)
+            self.event_store.save_event(event)
+            self.publisher.publish(event)
+
+            return aggregate.clinical_result.to_dict()
+
+        except Exception as e:
+            print(f"Error en handle_create_result: {str(e)}")
+            raise
+

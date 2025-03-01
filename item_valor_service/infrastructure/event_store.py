@@ -9,6 +9,7 @@ class EventStore(db.Model):
    id = db.Column(db.Integer, primary_key=True)
    event_name = db.Column(db.String(100), nullable=False)
    event_data = db.Column(db.JSON, nullable=False)
+   event_version = db.Column(db.Integer, nullable=False, default=1)
    created_at = db.Column(db.DateTime, default=datetime.utcnow)
    processed = db.Column(db.Boolean, default=False)
 
@@ -18,7 +19,7 @@ class EventStoreRepository:
        self.client = pulsar.Client("pulsar://pulsar:6650")
 
    def save_event(self, event):
-       new_event = EventStore(event_name=event.name, event_data=event.data, processed=False)
+       new_event = EventStore(event_name=event.name, event_data=event.data, event_version=event.version, processed=False)
        self.db_session.add(new_event)
        self.db_session.commit()
 

@@ -22,7 +22,8 @@ class ClinicalResultAggregate:
         if not events:
             return None
 
-        aggregate = None
+        aggregate = ClinicalResultAggregate(None, None)
+        
         for event in events:
             if event["name"] == "ResultCreated":
                 aggregate = ClinicalResultAggregate(event["data"]["patient"], event["data"]["result"])

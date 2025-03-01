@@ -15,17 +15,3 @@ class ClinicalResultAggregate:
             "patient": self.clinical_result.patient,
             "result": self.clinical_result.result
         }
-
-    @staticmethod
-    def rehydrate(event_store_repo, result_id):
-        events = event_store_repo.get_events_for_aggregate(result_id)
-        if not events:
-            return None
-
-        aggregate = ClinicalResultAggregate(None, None)
-        
-        for event in events:
-            if event["name"] == "ResultCreated":
-                aggregate = ClinicalResultAggregate(event["data"]["patient"], event["data"]["result"])
-        
-        return aggregate

@@ -18,17 +18,12 @@ class EventConsumer:
             schema=AvroSchema(ResultCreatedSchema)
         )
 
-    def deserialize_event(self, avro_bytes):
-        avro_bytes = BytesIO(avro_bytes)
-        event_data = fastavro.reader(avro_bytes)
-        return list(event_data)[0]
-
     def listen(self):
         print("Consumidor iniciado. Esperando eventos...")
         while True:
             try:
                 msg = self.consumer.receive(timeout_millis=5000)
-                event_data = self.deserialize_event(msg.data())
+                event_data = msg.value()
                 print(f"Evento recibido: {event_data}")
 
                 self.consumer.acknowledge(msg)

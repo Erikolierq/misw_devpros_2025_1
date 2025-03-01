@@ -1,6 +1,4 @@
 import pulsar
-import fastavro
-from io import BytesIO
 from pulsar.schema import Record, String, Integer, AvroSchema
 
 class ResultCreatedSchema(Record):
@@ -25,13 +23,14 @@ class EventConsumer:
                 msg = self.consumer.receive(timeout_millis=5000)
                 event_data = msg.value()
                 print(f"Evento recibido: {event_data}")
-
                 self.consumer.acknowledge(msg)
+
             except pulsar.Timeout:
                 print("No hay eventos en la cola. Reintentando...")
+            
             except Exception as e:
                 print(f"Error procesando evento: {str(e)}")
-                self.consumer.negative_acknowledge(msg)
+                self.consumer.acknowledge(msg)
 
     def close(self):
         self.client.close()

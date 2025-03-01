@@ -1,4 +1,3 @@
-import pulsar
 import fastavro
 from io import BytesIO
 from pulsar.schema import Record, String, Integer, AvroSchema

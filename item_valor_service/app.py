@@ -77,7 +77,6 @@ def start_consumer():
     consumer = EventConsumer("pulsar://pulsar:6650")
     consumer.listen()
 
-# Iniciar consumidor en un hilo separado
 consumer_thread = threading.Thread(target=start_consumer, daemon=True)
 consumer_thread.start()
 

@@ -12,9 +12,9 @@ class EventPublisher:
 
     def publish(self, event):
         try:
-            event_data = event.to_json().encode('utf-8')  # Cambiado de to_dict() a to_json()
+            event_data = event.to_json().encode('utf-8')
             self.producer.send(event_data)
-            print(f"Evento publicado: {event.to_json()}")  # Imprimir confirmación
+            print(f"Evento publicado: {event.to_json()}")
         except Exception as e:
             print(f"Error al publicar evento: {e}")
 

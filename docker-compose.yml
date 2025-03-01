@@ -45,6 +45,8 @@ services:
     restart: always
     volumes:
       - pulsar_data:/pulsar/data
+    environment:
+      - PULSAR_STANDALONE_USE_SCHEMA_REGISTRY=true
 
   api_gateway:
     build: ./api-gateway

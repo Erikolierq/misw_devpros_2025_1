@@ -1,9 +1,6 @@
 import pulsar
 import json
 
-import pulsar
-import json
-
 class EventConsumer:
     def __init__(self, pulsar_url="pulsar://pulsar:6650"):
         self.client = pulsar.Client(pulsar_url)
@@ -15,7 +12,7 @@ class EventConsumer:
         print("Consumidor iniciado. Esperando eventos...")
         while True:
             try:
-                msg = self.consumer.receive(timeout_millis=5000)  # Evita bloqueos infinitos
+                msg = self.consumer.receive(timeout_millis=5000)
                 event_data = json.loads(msg.data().decode("utf-8"))
                 print(f"Evento recibido: {event_data}")
                 self.consumer.acknowledge(msg)

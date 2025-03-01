@@ -118,3 +118,15 @@ Se separan claramente:
 - **Operaciones de comando** (creación de resultados clínicos).
 - **Operaciones de consulta** (lectura de resultados clínicos).
 
+## Microservicio item_valor_service
+
+### Arquitectura de `item_valor_service`
+
+### Topología: Descentralizada
+Cada microservicio maneja su propia base de datos y comunica cambios a través de eventos en Apache Pulsar. 
+Esto evita dependencias directas entre servicios y mejora la escalabilidad.
+
+### Modelo de almacenamiento: Event Sourcing
+- Todos los cambios en `ClinicalResult` se almacenan como eventos en `event_store`.
+- Los eventos se publican en Pulsar para notificar a otros servicios.
+- Se puede reconstruir el estado de un `ClinicalResultAggregate` desde el historial de eventos.

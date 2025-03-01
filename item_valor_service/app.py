@@ -9,6 +9,8 @@ from infrastructure.event_publisher import EventPublisher
 from application.command_handlers import CommandHandler
 from application.event_handlers import EventHandler
 from infrastructure.event_store import EventStoreRepository
+from infrastructure.event_consumer import EventConsumer
+import threading
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
@@ -71,7 +73,13 @@ def get_clinical_result(result_id):
 
     return jsonify(result.to_dict()), 200
 
+def start_consumer():
+    consumer = EventConsumer("pulsar://pulsar:6650")
+    consumer.listen()
 
+# Iniciar consumidor en un hilo separado
+consumer_thread = threading.Thread(target=start_consumer, daemon=True)
+consumer_thread.start()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5003)

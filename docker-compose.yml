@@ -38,11 +38,13 @@ services:
     container_name: pulsar
     command: ["bin/pulsar", "standalone"]
     ports:
-      - "6650:6650"  # Puerto para la comunicación con los clientes
-      - "8085:8080"  # Puerto para la API REST de Pulsar
+      - "6650:6650"
+      - "8085:8080"
     networks:
       - micros-net
     restart: always
+    volumes:
+      - pulsar_data:/pulsar/data
 
   api_gateway:
     build: ./api-gateway
@@ -106,3 +108,4 @@ networks:
 volumes:
   pgdata:
   redis_data:
+  pulsar_data:

@@ -12,12 +12,12 @@ class EventPublisher:
 
     def publish(self, event):
         try:
-            event_data = json.dumps(event.to_dict()).encode('utf-8')
-            print(f"Publicando evento en Pulsar: {json.dumps(event.data)}")
+            event_data = event.to_json().encode('utf-8')  # Cambiado de to_dict() a to_json()
             self.producer.send(event_data)
-            print(f"Evento publicado: {event.to_dict()}")
+            print(f"Evento publicado: {event.to_json()}")  # Imprimir confirmación
         except Exception as e:
             print(f"Error al publicar evento: {e}")
+
 
     def close(self):
         self.client.close()

@@ -3,7 +3,6 @@ import requests
 
 app = Flask(__name__)
 
-# Mapeo de microservicios
 MICROSERVICES = {
     "auth": "http://auth_service:5001",
     "certificator": "http://certificator_service:5002",

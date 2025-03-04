@@ -21,17 +21,32 @@ services:
     restart: always
 
   redis:
-      image: redis:latest
-      container_name: redis_auth
-      restart: always
-      ports:
-        - "6379:6379"
-      volumes:
-        - redis_data:/data
-        - ./redis.conf:/usr/local/etc/redis/redis.conf
-      command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
-      networks:
-        - micros-net
+    image: redis:latest
+    container_name: redis_auth
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    networks:
+      - micros-net
+
+  pulsar:
+    image: apachepulsar/pulsar:latest
+    container_name: pulsar
+    command: ["bin/pulsar", "standalone"]
+    ports:
+      - "6650:6650"
+      - "8085:8080"
+    networks:
+      - micros-net
+    restart: always
+    volumes:
+      - pulsar_data:/pulsar/data
+    environment:
+      - PULSAR_STANDALONE_USE_SCHEMA_REGISTRY=true
 
   api_gateway:
     build: ./api-gateway
@@ -42,6 +57,7 @@ services:
       - micros-net
     depends_on:
       - db_services
+      - pulsar
 
   auth_service:
     build: ./auth_service
@@ -52,6 +68,7 @@ services:
       - micros-net
     depends_on:
       - db_services
+      - pulsar
 
   certificator_service:
     build: ./certificator_service
@@ -62,7 +79,7 @@ services:
       - micros-net
     depends_on:
       - db_services
-
+      - pulsar
 
   item_valor_service:
     build: ./item_valor_service
@@ -73,6 +90,9 @@ services:
       - micros-net
     depends_on:
       - db_services
+      - pulsar
+    environment:
+      - ENCRYPTION_KEY=7d0X4l7ZJPCoD1qHVp35u-AwevhjVW0CiSMuWx9waBM=
 
   users_service:
     build: ./user_service
@@ -83,7 +103,7 @@ services:
       - micros-net
     depends_on:
       - db_services
-
+      - pulsar
 
 networks:
   micros-net:
@@ -92,3 +112,4 @@ networks:
 volumes:
   pgdata:
   redis_data:
+  pulsar_data:

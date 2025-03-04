@@ -122,11 +122,32 @@ Se separan claramente:
 
 ### Arquitectura de `item_valor_service`
 
-### Topología: Descentralizada
-Cada microservicio maneja su propia base de datos y comunica cambios a través de eventos en Apache Pulsar. 
-Esto evita dependencias directas entre servicios y mejora la escalabilidad.
 
-### Modelo de almacenamiento: Event Sourcing
-- Todos los cambios en `ClinicalResult` se almacenan como eventos en `event_store`.
-- Los eventos se publican en Pulsar para notificar a otros servicios.
-- Se puede reconstruir el estado de un `ClinicalResultAggregate` desde el historial de eventos.
+### 1. Microservicios basados en eventos
+Estamos utilizando Apache Pulsar como broker de eventos, lo que permite la comunicación asincrónica entre servicios mediante eventos.
+Se implementó un EventPublisher y un EventConsumer, lo cual es correcto en un enfoque basado en eventos.
+
+
+### 2. Tipo de evento utilizado
+✅ Usa eventos con carga de estado
+Los eventos como ResultCreatedEvent y ResultQueriedEvent incluyen datos relacionados con el resultado clínico o el usuario que consulta el resultado.
+
+### 3. Diseño del esquema y su evolución
+Tecnología: Usa PostgreSQL para almacenamiento y Apache Pulsar para mensajería, lo cual es una buena combinación.
+Evolución del esquema: El EventStore permite cierto control sobre la evolución de eventos, pero no hay versión de esquema definida
+
+### 4. Patrón de almacenamiento de datos
+✅ Usa almacenamiento descentralizado
+Cada servicio tiene su propia base de datos (users_db en PostgreSQL) y no hay dependencias directas a una base de datos centralizada.
+¿Por qué?
+En un sistema de microservicios, cada servicio maneja su propio almacenamiento para evitar acoplamiento.
+Tu servicio solo interactúa con su propia base de datos (clinical_results), lo cual es correcto.
+
+### 5. Patrón de almacenamiento: CRUD vs Event Sourcing
+✅ Usa Event Sourcing
+Tienes un EventStoreRepository que guarda eventos en la base de datos.
+ClinicalResultAggregate.rehydrate() reconstruye el estado a partir de eventos pasados.
+¿Por qué?
+En lugar de almacenar solo el estado actual en la base de datos, almacenas eventos y puedes reconstruir la historia del agregado (ClinicalResult).
+event_store actúa como una fuente de verdad en lugar de una simple tabla con resultados.
+

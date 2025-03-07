@@ -8,6 +8,9 @@ class UserRepository:
     def get_all_users(self):
         users = self.session.query(User).all()
         return [user.to_dict() for user in users]
+    
+    def get_by_username(self, username):
+        return self.session.query(User).filter(User.username == username).first()
 
     def add(self, user):
         self.session.add(user)

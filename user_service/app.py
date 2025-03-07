@@ -49,6 +49,10 @@ def create_user():
         if not username or not password:
             return jsonify({"msg": "Se requieren username y password"}), 400
 
+        existing_user = user_repo.get_by_username(username)
+        if existing_user:
+            return jsonify({"msg": "El usuario ya está registrado"}), 409
+
         result_data = command_handler.handle_create_result(username, password, role)
         return jsonify(result_data), 201
     

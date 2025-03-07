@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "ResultCreated",
+  "namespace": "com.example",
+  "fields": [
+    {"name": "schema_version", "type": "string", "default": "1.0"},
+    {"name": "result_id", "type": "int"},
+    {"name": "patient", "type": "string"},
+    {"name": "result", "type": "string"}
+  ]
+}

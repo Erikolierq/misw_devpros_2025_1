@@ -1,0 +1,10 @@
+{
+  "type": "record",
+  "name": "ResultQueried",
+  "namespace": "com.example",
+  "fields": [
+    {"name": "schema_version", "type": "string", "default": "1.0"},
+    {"name": "user_id", "type": "int"},
+    {"name": "result_id", "type": "int"}
+  ]
+}

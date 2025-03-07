@@ -49,7 +49,7 @@ services:
       - PULSAR_STANDALONE_USE_SCHEMA_REGISTRY=true
 
   api_gateway:
-    build: ./api-gateway
+    build: ./api_gateway
     ports:
       - "8080:5000"
     restart: always

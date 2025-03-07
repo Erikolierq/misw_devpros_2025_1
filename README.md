@@ -102,23 +102,23 @@ Estamos utilizando Apache Pulsar como broker de eventos, lo que permite la comun
 Se implementó un EventPublisher y un EventConsumer, lo cual es correcto en un enfoque basado en eventos.
 
 ### 2. Tipo de evento utilizado
-✅ Usa eventos con carga de estado
+Usa eventos con carga de estado
 Los eventos como ResultCreatedEvent y ResultQueriedEvent incluyen datos relacionados con el resultado clínico o el usuario que consulta el resultado.
 
 ### 3. Diseño del esquema y su evolución
-Tecnología: Usa PostgreSQL para almacenamiento y Apache Pulsar para mensajería, lo cual es una buena combinación.
-Evolución del esquema: El EventStore permite cierto control sobre la evolución de eventos, pero no hay versión de esquema definida
+* Tecnología: Usa PostgreSQL para almacenamiento y Apache Pulsar para mensajería, lo cual es una buena combinación.
+* Evolución del esquema: El EventStore permite cierto control sobre la evolución de eventos, pero no hay versión de esquema definida
 
 ### 4. Patrón de almacenamiento de datos
-✅ Usa almacenamiento descentralizado
+Usa almacenamiento descentralizado
 Cada servicio tiene su propia base de datos (users_db en PostgreSQL) y no hay dependencias directas a una base de datos centralizada.
 ¿Por qué?
 En un sistema de microservicios, cada servicio maneja su propio almacenamiento para evitar acoplamiento.
 El servicio solo interactúa con su propia base de datos (clinical_results).
 
 ### 5. Patrón de almacenamiento: CRUD vs Event Sourcing
-✅ Usa Event Sourcing
-Tienes un EventStoreRepository que guarda eventos en la base de datos.
+Usa Event Sourcing
+Tenemos un EventStoreRepository que guarda eventos en la base de datos.
 ClinicalResultAggregate.rehydrate() reconstruye el estado a partir de eventos pasados.
 ¿Por qué?
 En lugar de almacenar solo el estado actual en la base de datos, se almacenan eventos y pueden reconstruir la historia del agregado (ClinicalResult).
@@ -133,8 +133,8 @@ Se usa la clase `EncryptionService` con la libreria `cryptography` seteando una 
 
 ## Microservicio `user_service`
 
-### 1. Arquitectura basada en eventos: 
-El servicio user_service sigue los principios de microservicios basados en eventos utilizando Apache Pulsar como broker de mensajes. La comunicación entre servicios se realiza a través de eventos que se publican y consumen de manera asincrónica.
+### 1. Microservicio basada en eventos: 
+El servicio `user_service` sigue los principios de microservicios basados en eventos utilizando Apache Pulsar como broker de mensajes. La comunicación entre servicios se realiza a través de eventos que se publican y consumen de manera asincrónica.
 
 ### 2. Tipo de evento utilizado: 
 El servicio user_service usa eventos de integración, ya que los eventos publicados (por ejemplo, UserCreatedEvent) notifican a otros microservicios sobre cambios en el estado del usuario, sin contener la carga completa del estado. Estos eventos permiten a otros servicios reaccionar y tomar decisiones sin necesidad de consultar directamente a user_service.
@@ -159,9 +159,10 @@ Justificación:
 
 ###  6. Aplicación de DDD: 
 El servicio sigue los principios de Domain-Driven Design (DDD) mediante:
-Agregados: UserAggregate encapsula la lógica de creación de usuarios.
-Contextos acotados: user_service maneja solo la gestión de usuarios.
-Inversión de dependencias: Se usan interfaces como UserRepository y EventStoreRepository para desacoplar la infraestructura del dominio.
+* Agregados: UserAggregate encapsula la lógica de creación de usuarios.
+* Contextos acotados: user_service maneja solo la gestión de usuarios.
+* Inversión de dependencias: Se usan interfaces como UserRepository y EventStoreRepository para desacoplar la infraestructura del dominio.
+
 Capas y arquitectura cebolla:
 * domain/ para la lógica de dominio.
 * application/ para manejadores de comandos y eventos.

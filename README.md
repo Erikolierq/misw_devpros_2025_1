@@ -93,36 +93,9 @@ Authorization: Bearer <tu_token_jwt>
 📌 Este endpoint recupera el resultado clínico solo para usuarios autenticados con rol 2.
 
 ---
+# Semana 6 y 7
 
-## 🛠 Explicación de la Implementación
-
-Se implementó uno de los servicios de la arquitectura (el servicio **Item Valor**) siguiendo estos principios:
-
-### 📌 Domain Driven Design (DDD)
-
-Se definió el dominio del servicio mediante la entidad `ClinicalResult` y se establecieron eventos de dominio como `ResultCreatedEvent` y `ResultQueriedEvent`.
-
-### 📌 Arquitectura Hexagonal
-
-La solución se organiza en capas:
-
-- **Dominio**: Lógica central del negocio.
-- **Infraestructura**: Persistencia con `SQLAlchemy` y `PostgreSQL`.
-- **Aplicación**: Exposición de API con `Flask`.
-
-
-### 📌 Patrón CQS (Command Query Separation)
-
-Se separan claramente:
-
-- **Operaciones de comando** (creación de resultados clínicos).
-- **Operaciones de consulta** (lectura de resultados clínicos).
-
-# Semana 6
-
-## Microservicio item_valor_service
-
-### Arquitectura de `item_valor_service`
+## Microservicio `item_valor_service`
 
 ### 1. Microservicios basados en eventos
 Estamos utilizando Apache Pulsar como broker de eventos, lo que permite la comunicación asincrónica entre servicios mediante eventos.
@@ -150,4 +123,53 @@ ClinicalResultAggregate.rehydrate() reconstruye el estado a partir de eventos pa
 ¿Por qué?
 En lugar de almacenar solo el estado actual en la base de datos, se almacenan eventos y pueden reconstruir la historia del agregado (ClinicalResult).
 event_store actúa como una fuente de verdad en lugar de una simple tabla con resultados.
+
+### Escenario de calidad aplicado al servicio `item_valor_service`
+#### ✔ Escenario 1 (Protección de datos sensibles en el almacenamiento): 
+Los datos médicos almacenados estarán cifrados y solo accesibles con credenciales autorizadas.
+Se usa la clase `EncryptionService` con la libreria `cryptography` seteando una llave en el environment y así los resultados clínicos son manejados con protección de datos
+
+--- 
+
+## Microservicio `user_service`
+
+### 1. Arquitectura basada en eventos: 
+El servicio user_service sigue los principios de microservicios basados en eventos utilizando Apache Pulsar como broker de mensajes. La comunicación entre servicios se realiza a través de eventos que se publican y consumen de manera asincrónica.
+
+### 2. Tipo de evento utilizado: 
+El servicio user_service usa eventos de integración, ya que los eventos publicados (por ejemplo, UserCreatedEvent) notifican a otros microservicios sobre cambios en el estado del usuario, sin contener la carga completa del estado. Estos eventos permiten a otros servicios reaccionar y tomar decisiones sin necesidad de consultar directamente a user_service.
+Este enfoque mejora la descentralización y la independencia entre microservicios, alineándose con la arquitectura de eventos.
+
+### 3. Diseño del esquema y su evolución:
+* Tecnología: Se usa Apache Pulsar como broker de eventos, con AvroSchema para la serialización de eventos.
+* Evolución del esquema: La versión del esquema está definida en schema_version dentro del modelo ResultCreatedSchema. Esto permite manejar cambios evolutivos sin romper compatibilidad con versiones anteriores.
+* Beneficio: Al usar Avro con Schema Registry de Pulsar, se facilita la validación de versiones y la compatibilidad con servicios que consumen eventos.
+
+###  4. Almacenamiento de datos: Se usa un modelo híbrido de almacenamiento:
+* Base de datos centralizada (PostgreSQL) para mantener la persistencia de usuarios.
+* Event Store para almacenar eventos, asegurando que el historial de cambios pueda ser consultado y reproducido si es necesario.
+Este enfoque permite un balance entre consistencia y escalabilidad.
+
+###  5. Modelo de almacenamiento: 
+Se implementa Event Sourcing, ya que los eventos (UserCreatedEvent, ResultQueriedEvent) se almacenan en el EventStore. Esto permite reconstruir el estado del dominio a partir de la secuencia de eventos.
+Justificación:
+* Facilita la trazabilidad y auditoría de los cambios.
+* Permite la recuperación del estado sin depender de la base de datos relacional.
+* Se alinea con DDD al modelar cambios en el dominio mediante eventos de negocio.
+
+###  6. Aplicación de DDD: 
+El servicio sigue los principios de Domain-Driven Design (DDD) mediante:
+Agregados: UserAggregate encapsula la lógica de creación de usuarios.
+Contextos acotados: user_service maneja solo la gestión de usuarios.
+Inversión de dependencias: Se usan interfaces como UserRepository y EventStoreRepository para desacoplar la infraestructura del dominio.
+Capas y arquitectura cebolla:
+* domain/ para la lógica de dominio.
+* application/ para manejadores de comandos y eventos.
+* infrastructure/ para acceso a datos, encriptación y comunicación con Pulsar.
+Esto garantiza un diseño modular, flexible y alineado con las mejores prácticas de microservicios basados en eventos.
+
+### Escenario de calidad aplicado al servicio `user_service`
+#### ✔ Escenario #5 (Alta disponibilidad del API en caso de alta demanda): 
+Para evitar que un solo usuario sobrecargue el sistema, aplicamos Rate Limiting.
+Se limita el consumo de las APIs por usuario, se establece en el archivo `app.py` con la libreria `flask-limiter` seteando un cantidad de llamados para POST, GET y en general.
 

@@ -90,7 +90,6 @@ Utiliza Postman (u otro tester de APIs) para interactuar con los siguientes endp
 ```plaintext
 Authorization: Bearer <tu_token_jwt>
 ```
-📌 Este endpoint recupera el resultado clínico solo para usuarios autenticados con rol 2.
 
 ---
 # Semana 6 y 7

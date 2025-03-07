@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import requests
+import json
 
 app = Flask(__name__)
 
@@ -12,39 +13,71 @@ MICROSERVICES = {
 
 @app.route('/')
 def home():
-    return jsonify({"message": "API Gateway Running"})
+    return jsonify({"message": "BFF Running"})
 
-@app.route('/auth/<path:path>', methods=["GET", "POST", "PUT", "DELETE"])
-def proxy_auth(path):
-    return proxy_request("auth", path)
+@app.route('/login', methods=["POST"])
+def login():
+    auth_data = request.json
+    response = requests.post(f"{MICROSERVICES['auth']}/login", json=auth_data)
+    # Aca se obtiene un access_token
+    return jsonify(response.json()), response.status_code
 
-@app.route('/certificator/<path:path>', methods=["GET", "POST", "PUT", "DELETE"])
-def proxy_certificator(path):
-    return proxy_request("certificator", path)
+@app.route('/user-profile', methods=["GET"])
+def user_profile():
+    user_id = request.headers.get("User-Id")
+    if not user_id:
+        return jsonify({"error": "User-Id header is required"}), 400
+    
+    user_data = requests.get(f"{MICROSERVICES['users']}/users/{user_id}").json()
+    certs = requests.get(f"{MICROSERVICES['certificator']}/certificates/{user_id}").json()
+    
+    return jsonify({
+        "user": user_data,
+        "certifications": certs
+    })
 
-@app.route('/item_valor/<path:path>', methods=["GET", "POST", "PUT", "DELETE"])
-def proxy_item_valor(path):
-    return proxy_request("item_valor", path)
+@app.route('/dashboard', methods=["GET"])
+def dashboard():
+    user_id = request.headers.get("User-Id")
+    if not user_id:
+        return jsonify({"error": "User-Id header is required"}), 400
+    
+    user_info = requests.get(f"{MICROSERVICES['users']}/users/{user_id}").json()
+    user_items = requests.get(f"{MICROSERVICES['item_valor']}/items/{user_id}").json()
+    
+    return jsonify({
+        "user": user_info,
+        "items": user_items
+    })
 
-@app.route('/users/<path:path>', methods=["GET", "POST", "PUT", "DELETE"])
-def proxy_users(path):
-    return proxy_request("users", path)
+@app.route('/users', methods=["POST"])
+def create_user():
+    user_data = request.json
+    response = requests.post(f"{MICROSERVICES['users']}/users", json=user_data)
+    return jsonify(response.json()), response.status_code
 
-def proxy_request(service, path):
-    url = f"{MICROSERVICES[service]}/{path}"
-    try:
-        response = requests.request(
-            method=request.method,
-            url=url,
-            headers={key: value for (key, value) in request.headers if key != 'Host'},
-            json=request.get_json() if request.data else None
-        )
-        try:
-            return jsonify(response.json()), response.status_code
-        except requests.exceptions.JSONDecodeError:
-            return jsonify({"error": "Invalid JSON response from service", "service": service, "status_code": response.status_code, "response_text": response.text}), response.status_code
-    except requests.exceptions.RequestException as e:
-        return jsonify({"error": "Service request failed", "service": service, "message": str(e)}), 500
+@app.route('/users', methods=["GET"])
+def get_all_users():
+    response = requests.get(f"{MICROSERVICES['users']}/users")
+    return jsonify(response.json()), response.status_code
+
+@app.route('/results', methods=["POST"])
+def create_item_valor():
+    item_data = request.json
+    response = requests.post(
+        f"{MICROSERVICES['item_valor']}/results", 
+        json=item_data,
+        headers={"Authorization": request.headers.get("Authorization")}
+    )
+    return jsonify(response.json()), response.status_code
+
+@app.route('/results/<user_id>', methods=["GET"])
+def get_item_valor(user_id):
+    response = requests.get(
+        f"{MICROSERVICES['item_valor']}/results/{user_id}",
+        headers={"Authorization": request.headers.get("Authorization")}
+    )
+    return jsonify(response.json()), response.status_code
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

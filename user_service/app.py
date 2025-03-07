@@ -2,6 +2,17 @@ import os
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+import pulsar
+from infrastructure.database import db, init_db
+from domain.events import ResultQueriedEvent
+from infrastructure.database import db, init_db
+from infrastructure.repository import UserRepository
+from infrastructure.event_publisher import EventPublisher
+from application.command_handlers import CommandHandler
+from application.event_handlers import EventHandler
+from infrastructure.event_store import EventStoreRepository
+from infrastructure.event_consumer import EventConsumer
+import threading
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
@@ -10,46 +21,65 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
+db.init_app(app)
+with app.app_context():
+    db.create_all()
 
-class User(db.Model):
-    __tablename__ = 'users'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    password = db.Column(db.String(100), nullable=False) 
-    role = db.Column(db.Integer, nullable=False)
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "username": self.username,
-            "role": self.role
-        }
+pulsar_client = pulsar.Client("pulsar://pulsar:6650")
+user_repo = UserRepository(db.session)
+event_store_repo = EventStoreRepository(db.session)
+event_publisher = EventPublisher(pulsar_client)
+
+command_handler = CommandHandler(user_repo, event_publisher, event_store_repo)
+event_handler = EventHandler(user_repo, event_store_repo)
 
 @app.route('/users', methods=['POST'])
 def create_user():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-    role = data.get('role', 1)  
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({"msg": "No se enviaron datos"}), 400
+
+        username = data.get('username')
+        password = data.get('password')
+        role = data.get('role', 1)  
+
+        if not username or not password:
+            return jsonify({"msg": "Se requieren username y password"}), 400
+
+        result_data = command_handler.handle_create_result(username, password, role)
+        return jsonify(result_data), 201
     
-    if not username or not password:
-        return jsonify({"msg": "Se requieren username y password"}), 400
+    except ValueError as e:
+        return jsonify({"msg": str(e)}), 400
+    except Exception as e:
+        app.logger.error(f"Error en create_user: {str(e)}")
+        return jsonify({"msg": "Error interno del servidor"}), 500
 
-    if User.query.filter_by(username=username).first():
-        return jsonify({"msg": "El username ya existe"}), 400
-
-    new_user = User(username=username, password=password, role=role)
-    db.session.add(new_user)
-    db.session.commit()
-    return jsonify(new_user.to_dict()), 201
 
 @app.route('/users', methods=['GET'])
 def list_users():
-    users = User.query.all()
-    return jsonify([user.to_dict() for user in users]), 200
+    users = user_repo.get_all_users()
+
+    if not users:
+        return jsonify({"msg": "No hay usuarios registrados"}), 200
+
+    event = ResultQueriedEvent(1, users)
+    event_publisher.publish(event)
+
+    return jsonify(users), 200
+
+def start_consumer():
+    consumer = EventConsumer("pulsar://pulsar:6650")
+    consumer.listen()
+
+consumer_thread = threading.Thread(target=start_consumer, daemon=True)
+consumer_thread.start()
+
+
+
 
 if __name__ == '__main__':
     

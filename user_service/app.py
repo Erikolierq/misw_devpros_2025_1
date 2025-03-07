@@ -13,6 +13,9 @@ from application.event_handlers import EventHandler
 from infrastructure.event_store import EventStoreRepository
 from infrastructure.event_consumer import EventConsumer
 import threading
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
@@ -24,6 +27,12 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 with app.app_context():
     db.create_all()
+    
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per minute"]
+)
 
 
 pulsar_client = pulsar.Client("pulsar://pulsar:6650")
@@ -35,6 +44,7 @@ command_handler = CommandHandler(user_repo, event_publisher, event_store_repo)
 event_handler = EventHandler(user_repo, event_store_repo)
 
 @app.route('/users', methods=['POST'])
+@limiter.limit("50 per minute") 
 def create_user():
     try:
         data = request.get_json()
@@ -62,8 +72,8 @@ def create_user():
         app.logger.error(f"Error en create_user: {str(e)}")
         return jsonify({"msg": "Error interno del servidor"}), 500
 
-
 @app.route('/users', methods=['GET'])
+@limiter.limit("50 per minute") 
 def list_users():
     users = user_repo.get_all_users()
 
@@ -81,9 +91,6 @@ def start_consumer():
 
 consumer_thread = threading.Thread(target=start_consumer, daemon=True)
 consumer_thread.start()
-
-
-
 
 if __name__ == '__main__':
     

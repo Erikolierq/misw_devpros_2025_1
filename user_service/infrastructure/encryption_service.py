@@ -3,10 +3,12 @@ import base64
 import os
 
 class EncryptionService:
-    def __init__(self, key=None):
-        if key is None:
-            key = base64.urlsafe_b64encode(os.urandom(32))
-        self.cipher = Fernet(key)
+    def __init__(self):
+        key = os.environ.get('ENCRYPTION_KEY')
+        if not key:
+            raise ValueError("Falta la clave de encriptación en las variables de entorno")
+        self.cipher = Fernet(key.encode())
+
 
     def encrypt(self, data):
         return self.cipher.encrypt(data.encode()).decode()

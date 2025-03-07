@@ -104,6 +104,8 @@ services:
     depends_on:
       - db_services
       - pulsar
+    environment:
+      - ENCRYPTION_KEY=7d0X4l7ZJPCoD1qHVp35u-AwevhjVW0CiSMuWx9waBM=
 
 networks:
   micros-net:

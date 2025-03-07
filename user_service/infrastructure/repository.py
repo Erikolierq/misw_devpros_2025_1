@@ -15,4 +15,14 @@ class UserRepository:
     def add(self, user):
         self.session.add(user)
         self.session.commit()
+        
+    def verify_password(self, username, password):
+        user = self.get_by_username(username)
+        if user:
+            try:
+                decrypted_password = self.encryption_service.decrypt(user.password)
+                return decrypted_password == password
+            except Exception:
+                return False
+        return False
 

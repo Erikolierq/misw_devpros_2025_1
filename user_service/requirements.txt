@@ -7,3 +7,4 @@ psycopg2-binary==2.9.3
 pulsar-client==3.3.0
 fastavro
 cryptography==42.0.0
+flask-limiter

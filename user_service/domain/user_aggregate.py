@@ -1,9 +1,12 @@
 from .user import User
 from .events import UserCreatedEvent
+from infrastructure.encryption_service import EncryptionService
 
 class UserAggregate:
     def __init__(self, username, password, role):
-        self.user = User(username=username, password=password, role=role)
+        encryption_service = EncryptionService()
+        encrypted_password = encryption_service.encrypt(password)  # Encriptar la contraseña
+        self.user = User(username=username, password=encrypted_password, role=role)
 
     @staticmethod
     def create(username, password, role):

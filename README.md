@@ -40,7 +40,7 @@ Utiliza Postman (u otro tester de APIs) para interactuar con los siguientes endp
 ### 1️⃣ Crear Usuarios
 
 **Método:** `POST`  
-**URL:** `http://localhost:8080/users/users`
+**URL:** `http://localhost:8080/users`
 
 #### Body (JSON):
 ```json
@@ -54,7 +54,7 @@ Utiliza Postman (u otro tester de APIs) para interactuar con los siguientes endp
 ### 2️⃣ Login
 
 **Método:** `POST`  
-**URL:** `http://localhost:8080/auth/login`
+**URL:** `http://localhost:8080/login`
 
 #### Body (JSON):
 ```json
@@ -69,7 +69,7 @@ Utiliza Postman (u otro tester de APIs) para interactuar con los siguientes endp
 ### 3️⃣ Crear un Resultado Clínico
 
 **Método:** `POST`  
-**URL:** `http://localhost:8080/item_valor/results`
+**URL:** `http://localhost:8080/results`
 
 #### Body (JSON):
 ```json
@@ -84,7 +84,7 @@ Utiliza Postman (u otro tester de APIs) para interactuar con los siguientes endp
 ### 4️⃣ Ver un Resultado Clínico
 
 **Método:** `GET`  
-**URL:** `http://localhost:8080/item_valor/results/1`
+**URL:** `http://localhost:8080/results/1`
 
 #### Headers:
 ```plaintext

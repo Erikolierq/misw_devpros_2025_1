@@ -2,7 +2,6 @@ import requests
 import threading
 import time
 
-
 def monitor(micro):
     while True:
         try:

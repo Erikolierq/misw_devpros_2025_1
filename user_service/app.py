@@ -15,7 +15,8 @@ from infrastructure.event_consumer import EventConsumer
 import threading
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-
+import logging
+logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
@@ -92,8 +93,15 @@ def start_consumer():
 consumer_thread = threading.Thread(target=start_consumer, daemon=True)
 consumer_thread.start()
 
+def ensure_topic_created(topic_name: str = "persistent://public/default/event-user"):
+    client = pulsar.Client("pulsar://pulsar:6650")
+    producer = client.create_producer(topic_name)
+    # Enviamos un mensaje “dummy” para forzar la creación del topic
+    producer.send("INIT-TOPIC".encode("utf-8"))
+    producer.close()
+    client.close()
 if __name__ == '__main__':
-    
+    ensure_topic_created()
     with app.app_context():
         db.create_all()  
     app.run(host='0.0.0.0', port=5004)

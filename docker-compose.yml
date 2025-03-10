@@ -47,6 +47,28 @@ services:
       - pulsar_data:/pulsar/data
     environment:
       - PULSAR_STANDALONE_USE_SCHEMA_REGISTRY=true
+    
+  create_namespace_topic:
+    image: apachepulsar/pulsar:latest
+    container_name: create_namespace_topic
+    depends_on:
+      - pulsar
+    networks:
+      - micros-net
+    # Este contenedor se queda en segundo plano un momento, usa pulsar-admin para crear namespace y tópico
+    command: >
+      sh -c "
+        echo 'Esperando que Pulsar esté listo...';
+        for i in 1 2 3 4 5; do
+          bin/pulsar-admin clusters list && break || (echo 'Aún no listo'; sleep 5);
+        done;
+        echo 'Creando namespace public/default...';
+        bin/pulsar-admin namespaces create public/default || echo 'Ya existe';
+        echo 'Creando tópico persistent://public/default/event-user...';
+        bin/pulsar-admin topics create persistent://public/default/event-user || echo 'Ya existe';
+        echo 'Listo. Saliendo.'
+      "
+    restart: "no"   # Solo queremos que ejecute una vez y termine
 
   api_gateway:
     build: ./api_gateway
@@ -58,6 +80,7 @@ services:
     depends_on:
       - db_services
       - pulsar
+      - create_namespace_topic
 
   auth_service:
     build: ./auth_service
@@ -69,6 +92,7 @@ services:
     depends_on:
       - db_services
       - pulsar
+      - create_namespace_topic
     environment:
       - ENCRYPTION_KEY=7d0X4l7ZJPCoD1qHVp35u-AwevhjVW0CiSMuWx9waBM=
 
@@ -83,6 +107,8 @@ services:
     depends_on:
       - db_services
       - pulsar
+      - create_namespace_topic
+      
 
   item_valor_service:
     build: ./item_valor_service
@@ -94,6 +120,8 @@ services:
     depends_on:
       - db_services
       - pulsar
+      - create_namespace_topic
+      
     environment:
       - ENCRYPTION_KEY=7d0X4l7ZJPCoD1qHVp35u-AwevhjVW0CiSMuWx9waBM=
 
@@ -107,8 +135,31 @@ services:
     depends_on:
       - db_services
       - pulsar
+      - create_namespace_topic
+      
     environment:
       - ENCRYPTION_KEY=7d0X4l7ZJPCoD1qHVp35u-AwevhjVW0CiSMuWx9waBM=
+
+  notifications_service:
+    build: ./notifications_service
+    ports:
+      - "8086:5006"
+    networks:
+      - micros-net
+    depends_on:
+      - pulsar
+      - create_namespace_topic
+      - db_services
+    environment:
+      - PULSAR_URL=pulsar://pulsar:6650
+
+      # Credenciales Mailjet (reemplaza con tus keys reales):
+      - MJ_APIKEY_PUBLIC=8233f356a53b1981eb40b8dcb9b0d253
+      - MJ_APIKEY_PRIVATE=9887974ee043a7333a7f472f36f51a21
+      - MAILJET_DEFAULT_SENDER=fangeruno@gmail.com
+
+    restart: always
+
 
 networks:
   micros-net:

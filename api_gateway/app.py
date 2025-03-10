@@ -8,6 +8,7 @@ MICROSERVICES = {
     "certificator": "http://certificator_service:5002",
     "item_valor": "http://item_valor_service:5003",
     "users": "http://users_service:5004",
+    "notifications": "http://notifications_service:5006"
 }
 
 def forward_request(method, service, endpoint, data=None, headers=None):
@@ -63,6 +64,12 @@ def create_item_valor():
 def get_item_valor(user_id):
     headers = {"Authorization": request.headers.get("Authorization")}
     return forward_request("GET", "item_valor", f"/results/{user_id}", headers=headers)
+@app.route('/notifications/health', methods=["GET"])
+def notifications_health():
+    """
+    Endpoint para verificar la salud del notifications_service desde el API Gateway.
+    """
+    return forward_request("GET", "notifications", "/health")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -39,14 +39,13 @@ def start_consumer_for_results():
     consumer = EventConsumer(
         pulsar_client=pulsar_client,
         subscription_name="notifications-subscription-results",
-        topic="persistent://public/default/event-topic",  # <-- Tópico de resultados
+        topic="persistent://public/default/event-topic", 
         notification_handler=notification_handler,
-        event_type="ResultCreated" # Parámetro opcional para distinguir
+        event_type="ResultCreated" 
     )
     consumer.listen()
 
 
-# Lanzamos ambos consumidores en hilos separados
 thread_users = threading.Thread(target=start_consumer_for_users, daemon=True)
 thread_results = threading.Thread(target=start_consumer_for_results, daemon=True)
 

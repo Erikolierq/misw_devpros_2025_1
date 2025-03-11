@@ -8,7 +8,8 @@ MICROSERVICES = {
     "certificator": "http://certificator_service:5002",
     "item_valor": "http://item_valor_service:5003",
     "users": "http://users_service:5004",
-    "notifications": "http://notifications_service:5006"
+    "notifications": "http://notifications_service:5006",
+    "saga_log": "http://saga_log_service:5007"
 }
 
 def forward_request(method, service, endpoint, data=None, headers=None):
@@ -70,6 +71,10 @@ def notifications_health():
     Endpoint para verificar la salud del notifications_service desde el API Gateway.
     """
     return forward_request("GET", "notifications", "/health")
+
+@app.route('/saga/logs', methods=["GET"])
+def get_saga_logs():
+    return forward_request("GET", "saga_log", "/saga/logs")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

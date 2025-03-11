@@ -20,6 +20,20 @@ services:
       - micros-net
     restart: always
 
+  saga_log_db:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=saga_user
+      - POSTGRES_PASSWORD=saga_password
+      - POSTGRES_DB=saga_log_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - saga_pgdata:/var/lib/postgresql/data
+    networks:
+      - micros-net
+    restart: always
+
   redis:
     image: redis:latest
     container_name: redis_auth
@@ -160,6 +174,20 @@ services:
 
     restart: always
 
+  saga_log_service:
+    build: ./saga_log_service
+    ports:
+      - "8087:5007"
+    networks:
+      - micros-net
+    depends_on:
+      - pulsar
+      - create_namespace_topic
+      - saga_log_db
+    environment:
+      - PULSAR_URL=pulsar://pulsar:6650
+      - DATABASE_URL=postgresql://saga_user:saga_password@saga_log_db:5432/saga_log_db
+    restart: always
 
 networks:
   micros-net:
@@ -169,3 +197,5 @@ volumes:
   pgdata:
   redis_data:
   pulsar_data:
+  saga_pgdata:
+    driver: local

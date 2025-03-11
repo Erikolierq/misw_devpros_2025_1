@@ -8,3 +8,4 @@ pulsar-client==3.3.0
 fastavro
 cryptography==42.0.0
 flask-limiter
+flask-cors

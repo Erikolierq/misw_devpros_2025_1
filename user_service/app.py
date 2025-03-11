@@ -17,6 +17,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import logging
 logging.basicConfig(level=logging.INFO)
+from flask_cors import CORS 
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
@@ -29,6 +30,11 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
     
+CORS(app, resources={r"/users*": {"origins": "*"}})  # Permitir todas las IPs solo en pruebas
+
+
+# CORS(app, resources={r"/users*": {"origins": ["192.168.1.16"]}})
+
 limiter = Limiter(
     get_remote_address,
     app=app,

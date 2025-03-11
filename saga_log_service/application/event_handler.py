@@ -14,14 +14,14 @@ class SagaEventHandler:
 
             # Ignorar mensajes de inicialización ("INIT-TOPIC")
             if payload_str == "INIT-TOPIC":
-                logging.warning("[SagaEventHandler] ⚠️ Mensaje de inicialización detectado, ignorando.")
+                logging.warning("[SagaEventHandler]  Mensaje de inicialización detectado, ignorando.")
                 return
 
             # Parsear el mensaje como JSON
             try:
                 event_data = json.loads(payload_str)
             except json.JSONDecodeError as e:
-                logging.error(f"[SagaEventHandler] ❌ Error al parsear JSON: {str(e)}")
+                logging.error(f"[SagaEventHandler]  Error al parsear JSON: {str(e)}")
                 return  # Ignora el mensaje si no es JSON válido
 
             # Determinar el tipo de evento (UserCreated, ResultCreated, etc.)
@@ -33,7 +33,7 @@ class SagaEventHandler:
             elif topic == "persistent://public/default/event-topic":
                 SagaEventHandler.handle_result_created(event_data)
             else:
-                logging.warning(f"[SagaEventHandler] ⚠️ Tópico desconocido: {topic}")
+                logging.warning(f"[SagaEventHandler]  Tópico desconocido: {topic}")
 
             # Guardar en la BD
             SagaLogRepository.save_log(
@@ -42,21 +42,21 @@ class SagaEventHandler:
                 status="PROCESSED",
                 data=event_data
             )
-            logging.info(f"[SagaEventHandler] ✅ Evento almacenado en BD: {event_data}")
+            logging.info(f"[SagaEventHandler]  Evento almacenado en BD: {event_data}")
 
         except Exception as e:
-            logging.error(f"[SagaEventHandler] ❌ Error procesando evento: {str(e)}")
+            logging.error(f"[SagaEventHandler]  Error procesando evento: {str(e)}")
 
     @staticmethod
     def handle_user_created(event_data):
         user_id = event_data.get("id")
         username = event_data.get("username")
         role = event_data.get("role")
-        logging.info(f"[SagaEventHandler] 👤 Procesando USER -> user_id={user_id}, username={username}, role={role}")
+        logging.info(f"[SagaEventHandler]  Procesando USER -> user_id={user_id}, username={username}, role={role}")
 
     @staticmethod
     def handle_result_created(event_data):
         result_id = event_data.get("id")
         patient = event_data.get("patient")
         result_value = event_data.get("result")
-        logging.info(f"[SagaEventHandler] 🏥 Procesando RESULT -> ID={result_id}, Paciente={patient}, Resultado={result_value}")
+        logging.info(f"[SagaEventHandler]  Procesando RESULT -> ID={result_id}, Paciente={patient}, Resultado={result_value}")

@@ -30,15 +30,9 @@ db.init_app(app)
 with app.app_context():
     init_db(app)
 
-# ===========================================================================
-# CONFIGURACIÓN DE PULSAR
-# ===========================================================================
 PULSAR_URL = os.getenv("PULSAR_URL", "pulsar://pulsar:6650")
 pulsar_client = pulsar.Client(PULSAR_URL)
 
-# ===========================================================================
-# FUNCIONES PARA INICIAR CADA CONSUMIDOR EN HILOS (CON CONTEXTO)
-# ===========================================================================
 def start_consumer_for_users():
     """
     Escucha el tópico de 'event-user'
@@ -68,18 +62,12 @@ def start_consumer_for_results():
         )
         consumer.listen()
 
-# ===========================================================================
-# INICIAR HILOS
-# ===========================================================================
 thread_users = threading.Thread(target=start_consumer_for_users, daemon=True)
 thread_results = threading.Thread(target=start_consumer_for_results, daemon=True)
 
 thread_users.start()
 thread_results.start()
 
-# ===========================================================================
-# ENDPOINTS
-# ===========================================================================
 @app.route("/saga/logs", methods=["GET"])
 def get_saga_logs():
     """
@@ -93,9 +81,6 @@ def health_check():
     logging.info("[SagaLog] Se recibió /health")
     return jsonify({"status": "ok"}), 200
 
-# ===========================================================================
-# MAIN
-# ===========================================================================
 if __name__ == "__main__":
     logging.info("[SagaLog] 🚀 Iniciando servicio en puerto 5007")
     app.run(host="0.0.0.0", port=5007, debug=False)

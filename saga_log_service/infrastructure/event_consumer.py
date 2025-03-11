@@ -29,13 +29,13 @@ class SagaLogConsumer:
                     # Invocar el handler que procesará y guardará en BD
                     self.event_handler.process_event(topic_name, msg)
                     self.consumer.acknowledge(msg)
-                    logging.info(f"[SagaLogConsumer] ✅ Mensaje ACK en {topic_name}")
+                    logging.info(f"[SagaLogConsumer] Mensaje ACK en {topic_name}")
 
             except pulsar.Timeout:
                 # No hay mensajes, se continúa
                 continue
 
             except Exception as e:
-                logging.error(f"[SagaLogConsumer] ❌ Error procesando evento: {str(e)}")
+                logging.error(f"[SagaLogConsumer] Error procesando evento: {str(e)}")
                 if msg:
                     self.consumer.negative_acknowledge(msg)
